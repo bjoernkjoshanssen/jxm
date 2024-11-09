@@ -8,7 +8,7 @@ import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Data.Vector.Defs
 import Batteries.Data.List.Basic
 import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Backtracking.HydrophobicPolarModelBasic
+import Jxm.HydrophobicPolarModelBasic
 import Mathlib.Algebra.Ring.Prod
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Intervals

@@ -5,11 +5,11 @@ Authors: Bjørn Kjos-Hanssen
 -/
 import Mathlib.Data.Vector.Basic
 import Mathlib.Combinatorics.SimpleGraph.Basic
-import Mathlib.Backtracking.BacktrackingVerification
+import Jxm.BacktrackingVerification
 import Mathlib.Data.Vector.Defs
 import Batteries.Data.List.Basic
 import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Backtracking.HydrophobicPolarModel
+import Jxm.HydrophobicPolarModel
 import Mathlib.Tactic.FinCases
 /-!
 # Hydrophobic-polar protein folding model: automatic use of backtracking
