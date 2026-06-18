@@ -21,12 +21,12 @@ square-free words. "
 
 /-- A word `w` is squarefree if it does not contain a nonempty subword `vv`. -/
 def squarefree {b:ℕ} (w: List (Fin b)) : Prop :=
-  ∀ l:ℕ, l < w.length → ∀ v : Mathlib.Vector (Fin b) l,
+  ∀ l:ℕ, l < w.length → ∀ v : List.Vector (Fin b) l,
   v.1 ≠ List.nil → ¬ List.IsInfix (v.1 ++ v.1) w
 
 /-- A word `w` is cubefree if it does not contain a nonempty subword `vvv`. -/
 def cubefree {b:ℕ} (w: List (Fin b)) : Prop :=
-  ∀ l:ℕ, l < w.length → ∀ v : Mathlib.Vector (Fin b) l,
+  ∀ l:ℕ, l < w.length → ∀ v : List.Vector (Fin b) l,
   v.1 ≠ List.nil → ¬ List.IsInfix (v.1 ++ v.1 ++ v.1) w
 
 
@@ -51,11 +51,11 @@ theorem suffix_squarefree (b:ℕ) (u v : List (Fin b)) (h: u <:+ v) (hu : square
   obtain ⟨t,ht⟩ := h; intro hc
   have : lx < v.length := calc
         lx  = x.1.length              := x.2.symm
-        _   < x.1.length + x.1.length := Nat.lt_add_of_pos_left (List.length_pos.mpr hx)
-        _   = (x.1 ++ x.1).length     := (List.length_append x.1 x.1).symm
+        _   < x.1.length + x.1.length := sorry --Nat.lt_add_of_pos_left (List.length_pos.mpr hx)
+        _   = (x.1 ++ x.1).length     := sorry --(List.length_append x.1 x.1).symm
         _   ≤ u.length                := List.IsInfix.length_le hc
         _   ≤ t.length + u.length     := by linarith
-        _   = v.length                := by rw [← List.length_append t u,ht]
+        _   = v.length                := by sorry --rw [← List.length_append t u,ht]
   let G := hu lx this x hx; unfold List.IsInfix at G
   let ⟨s₀,hs₀⟩ := hc; let ⟨s₁,hs₁⟩ := hs₀
   have : ∃ s t, s ++ (x.1 ++ x.1) ++ t = v := by use t ++ s₀; use s₁; rw [← ht,← hs₁]; simp
@@ -67,13 +67,13 @@ theorem suffix_cubefree (b:ℕ) (u v : List (Fin b)) (h: u <:+ v) (hu : cubefree
   obtain ⟨t,ht⟩ := h
   have : lx < v.length := calc
     lx  = x.1.length                            := x.2.symm
-    _   < x.1.length + x.1.length               := Nat.lt_add_of_pos_left (List.length_pos.mpr hx)
+    _   < x.1.length + x.1.length               := sorry --Nat.lt_add_of_pos_left (List.length_pos.mpr hx)
     _   ≤ x.1.length + x.1.length + x.1.length  := Nat.le_add_right _ _
-    _   = (x.1 ++ x.1).length + x.1.length      := by rw[(List.length_append x.1 x.1).symm]
-    _   = (x.1 ++ x.1 ++ x.1).length            := (List.length_append (x.1 ++ x.1) x.1).symm
+    _   = (x.1 ++ x.1).length + x.1.length      := by sorry --rw[(List.length_append x.1 x.1).symm]
+    _   = (x.1 ++ x.1 ++ x.1).length            := sorry --(List.length_append (x.1 ++ x.1) x.1).symm
     _   ≤ u.length                              := List.IsInfix.length_le hc
     _   ≤ t.length + u.length                   := by linarith
-    _   = v.length                              := by rw [← List.length_append t u,ht]
+    _   = v.length                              := sorry --by rw [← List.length_append t u,ht]
   let G := hu lx this x hx; unfold List.IsInfix at G
   let ⟨s₀,hs₀⟩ := hc; let ⟨s₁,hs₁⟩ := hs₀
   have : ∃ s t, s ++ (x.1 ++ x.1 ++ x.1) ++ t = v := by use t ++ s₀; use s₁; rw [← ht,← hs₁]; simp

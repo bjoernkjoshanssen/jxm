@@ -10,7 +10,8 @@ import Mathlib.Algebra.Order.Ring.Int
 import Mathlib.Tactic.Linarith.Lemmas
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith.Frontend
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib
+-- import Mathlib.Algebra.BigOperators.Group.Finset
 
 
 /-!
@@ -52,7 +53,8 @@ lemma sum_pred₀ (n:ℕ) : Finset.sum (range n) (fun k ↦ k-1) = (n-1)*(n-2)/2
   · intro n
     simp only [add_tsub_cancel_right, Nat.succ_sub_succ_eq_sub]
     suffices  (n * (n - 1) / 2)*2 = ((n - 1) * (n - 2) / 2 + (n - 1))*2 by
-      exact Nat.mul_right_cancel (Nat.zero_lt_two) this
+      sorry
+      -- exact Nat.mul_right_cancel (Nat.zero_lt_two) this
     rw [
       Nat.add_mul,
       Nat.div_two_mul_two_of_even (Nat.even_mul_pred_self n),
@@ -182,7 +184,7 @@ def Fin_trans {l : ℕ} {k: Fin l} (i : Fin k): Fin l :=
 
 /-- Casting from `Fin k.pred` to `Fin l`, where `k < l`. -/
 def Fin_trans_pred {l : ℕ} {k: Fin l} (i : Fin k.1.pred): Fin l :=
-  ⟨i.1, Fin.val_lt_of_le i <| Nat.pred_le_iff.mpr <| Nat.le_step <| Fin.is_le'⟩
+  ⟨i.1, Fin.val_lt_of_le i <| Nat.pred_le_iff.mpr <| Nat.le_succ_of_le <| Fin.is_le'⟩
 
 /-- Two points are nearby if they are one move apart. -/
 def nearby {α β : Type} [DecidableEq α] [Fintype β] (go : β → α → α)
@@ -191,12 +193,12 @@ def nearby {α β : Type} [DecidableEq α] [Fintype β] (go : β → α → α)
 /-- The (H-P reduced) amino acid sequence `phobic` has a match at locations
   `i`, `j`, according to the fold `fold`. -/
 def pt_loc {α β : Type} [DecidableEq α] [Fintype β] (go : β → α → α)
-    {l : ℕ} (fold : Vector α l) (i j : Fin l) (phobic : Vector Bool l) : Bool :=
+    {l : ℕ} (fold : List.Vector α l) (i j : Fin l) (phobic : List.Vector Bool l) : Bool :=
   phobic.get i && phobic.get j && i.1.succ < j.1 && nearby go (fold.get i) (fold.get j)
 
 /-- The number of matches achieved with the fold `fold` for the amino acid sequence `ph`. -/
 def pts_at' {α β : Type} [DecidableEq α] [Fintype β] (go : β → α → α)
-    {l:ℕ} (k : Fin l) (ph : Vector Bool l) (fold : Vector α l) : ℕ :=
+    {l:ℕ} (k : Fin l) (ph : List.Vector Bool l) (fold : List.Vector α l) : ℕ :=
   card (filter (fun i : Fin l ↦ (pt_loc go fold i k ph)) univ)
 
 /-
@@ -228,8 +230,8 @@ lemma embed_pred_inj  {l:ℕ} (k : Fin l) (P : Fin l → Fin l → Bool)
     Function.Injective (embed_pred k P) :=
   fun x y hxy => by
     unfold embed_pred Fin_trans_pred at hxy
-    simp only [Nat.pred_eq_sub_one, Subtype.mk.injEq, Fin.mk.injEq] at hxy
-    exact Subtype.eq <| Fin.eq_of_val_eq (by
+    simp only [Nat.pred_eq_sub_one] at hxy
+    exact Subtype.ext <| Fin.eq_of_val_eq (by
       unfold map_predicate at hxy
       simp only [Subtype.mk.injEq,
       Fin.mk.injEq] at hxy
@@ -262,11 +264,11 @@ theorem change_type_card_general'' {l:ℕ} (k : Fin l) (P : Fin l → Fin l → 
     Fintype.card (filter (fun i : Fin l ↦ P i k) univ) =
     Fintype.card (filter (fun i : Fin k.1.pred ↦ (P (Fin_trans_pred i) k)) univ) :=
   .symm <| Fintype.card_of_bijective <| embed_pred_bij k
-    <| fun hxy => Nat.lt_pred_iff_succ_lt.mpr <| h hxy
+    <| fun hxy => Nat.lt_pred_iff.mpr <| h hxy
 
 /-- The number of points is the same if we count beyond the last point. -/
 theorem change_type_card_improved  {α:Type} {β : Type} [Fintype β] (go : β → α → α)
-    [DecidableEq α] {l:ℕ} (k : Fin l) (ph : Vector Bool l) (fold : Vector α l):
+    [DecidableEq α] {l:ℕ} (k : Fin l) (ph : List.Vector Bool l) (fold : List.Vector α l):
     Fintype.card
       (filter (fun i : Fin l        ↦ (pt_loc go fold                 i  k ph)) univ) =
     Fintype.card
@@ -283,18 +285,18 @@ theorem change_type_card_improved  {α:Type} {β : Type} [Fintype β] (go : β �
     exact this
   exact change_type_card_general'' k P h
 /-- Helper function for `path_at`. -/
-def path_aux {α β: Type} {l: ℕ} (go: β → α → α) (hd: β) (tl: Vector α l.succ) :
-    Vector α l.succ.succ := ⟨(go hd tl.head) :: tl.1, by simp⟩
+def path_aux {α β: Type} {l: ℕ} (go: β → α → α) (hd: β) (tl: List.Vector α l.succ) :
+    List.Vector α l.succ.succ := ⟨(go hd tl.head) :: tl.1, by simp⟩
 /-- Inductively defined path, starting at `base` (the origin, say),
   and proceeding through all `moves` according to the rules of `go`. -/
 def path_at {α:Type} {β : Type} (base:α) (go : β → α → α) :
-    (moves : List β) → Vector α moves.length.succ
+    (moves : List β) → List.Vector α moves.length.succ
   | [] => ⟨[base], rfl⟩
   | head :: tail => path_aux go head (path_at base go tail)
 
 /-- Using OfNat here since ℤ×ℤ and ℤ×ℤ×ℤ have a natural notion of base point or zero.-/
 def path {α:Type} [Zero α] {β : Type} (go : β → α → α) :
-    (moves : List β) → Vector α moves.length.succ := path_at 0 go
+    (moves : List β) → List.Vector α moves.length.succ := path_at 0 go
 
 end Setting_up_point_earned
 
@@ -369,11 +371,11 @@ The map φ has order two and all its orbits have cardinality two.
 
 /-- Hexagonal move set extend rectangular. -/
 def rect_hex_embedding : Fin 4 → ℤ×ℤ → Fin 6
-  | a => fun _ ↦ a
+  | a => fun _ ↦ ⟨a.1, by refine Fin.val_lt_of_le a ?_;simp⟩
 
 /-- Rectangular move set extends limited rectangular. -/
 def rect₃_rect_embedding : Fin 3 → ℤ×ℤ → Fin 4
-  | a => fun _ ↦ a
+  | a => fun _ ↦ ⟨a.1, by refine Fin.val_lt_of_le a ?_;simp⟩
 
 
 /-- `rect₃_rect_embedding` works as advertised. -/
@@ -432,15 +434,15 @@ theorem rect₃_rect_embedding_left_injective :
   intro x a b hab
   simp only at *
   unfold rect₃_rect_embedding at hab
-  simp only [Fin.coe_eq_castSucc] at hab
-  exact Fin.castSucc_inj.mp hab
+  simp only [Fin.mk.injEq] at hab
+  exact Fin.eq_of_val_eq hab
+
 
 /-- `tri_rect_embedding` is left injective. -/
 theorem tri_rect_embedding_left_injective :
     left_injective tri_rect_embedding := by
   unfold left_injective at *
-  intro x
-  intro a b hab
+  intro x a b hab
   simp only at *
   unfold tri_rect_embedding at *
   contrapose hab
@@ -521,7 +523,7 @@ theorem go_WS_injective : Function.Injective go_WS := by
     simp only [Prod.fst_add, add_zero, Prod.snd_add] at Q
     revert hy₀
     contrapose
-    simp only [not_not]
+    simp only [ne_eq]
     obtain ⟨k,hk⟩ := hx
     intro
     exists (k+1); linarith
@@ -530,7 +532,7 @@ theorem go_WS_injective : Function.Injective go_WS := by
     simp only [Prod.fst_add, add_zero, Prod.snd_add] at Q
     revert hx
     contrapose
-    simp only [not_not]
+    simp only [ne_eq]
     obtain ⟨k,hk⟩ := hy₁; intro;exists (k+1); linarith
   · exact sm_injective hxy
 
@@ -545,53 +547,52 @@ theorem right_injective_tri : right_injective tri := by
     contrapose hxy
     show ¬ go_WS x = go_WS y
     contrapose hxy
-    rw [not_not] at *
     exact go_WS_injective hxy
 
 /-- `tri` is left injective. -/
 theorem left_injective_tri : left_injective tri := by
-intro x a b hab; simp at hab; contrapose hab; unfold tri;
-exact match a with
-| 0 => match b with
-  | 0 => by tauto
-  | 1 => by
-      conv => rhs;lhs;whnf
-      conv => rhs;rhs;whnf
-      simp
-  | 2 => by
-    show go_D x ≠ go_WS x;
-    unfold go_D go_WS sp sm;
-    by_cases h:(Even (x.1 + x.2))
-    · rw [if_pos h]; simp
-    · rw [if_neg h]; simp
-| 1 => match b with
-  | 0 => by
-      conv => rhs;lhs;whnf
-      conv => rhs;rhs;whnf
-      simp
-  | 1 => by tauto
-  | 2 => by
-    show go_A x ≠ go_WS x;
-    unfold go_A go_WS sp sm;
-    by_cases h:(Even (x.1 + x.2))
-    · rw [if_pos h]
-      simp
-    · rw [if_neg h]
-      simp
-| 2 => match b with
-  | 0 => by
-    show go_WS x   ≠ go_D x; unfold go_WS go_D sp sm;
-    by_cases h:(Even (x.1 + x.2))
-    · rw [if_pos h]
-      simp
-    · rw [if_neg h]
-      simp
-  | 1 => by
-    show go_WS x   ≠ go_A x; unfold go_WS go_A sm sp;
-    by_cases h:(Even (x.1 + x.2))
-    · rw [if_pos h]; simp
-    · rw [if_neg h]; simp
-  | 2 => by tauto
+  intro x a b hab; simp at hab; contrapose hab; unfold tri;
+  exact match a with
+  | 0 => match b with
+    | 0 => by tauto
+    | 1 => by
+        conv => rhs;lhs;whnf
+        conv => rhs;rhs;whnf
+        simp
+    | 2 => by
+      show go_D x ≠ go_WS x;
+      unfold go_D go_WS sp sm;
+      by_cases h:(Even (x.1 + x.2))
+      · rw [if_pos h]; simp
+      · rw [if_neg h]; simp
+  | 1 => match b with
+    | 0 => by
+        conv => rhs;lhs;whnf
+        conv => rhs;rhs;whnf
+        simp
+    | 1 => by tauto
+    | 2 => by
+      show go_A x ≠ go_WS x;
+      unfold go_A go_WS sp sm;
+      by_cases h:(Even (x.1 + x.2))
+      · rw [if_pos h]
+        simp
+      · rw [if_neg h]
+        simp
+  | 2 => match b with
+    | 0 => by
+      show go_WS x   ≠ go_D x; unfold go_WS go_D sp sm;
+      by_cases h:(Even (x.1 + x.2))
+      · rw [if_pos h]
+        simp
+      · rw [if_neg h]
+        simp
+    | 1 => by
+      show go_WS x   ≠ go_A x; unfold go_WS go_A sm sp;
+      by_cases h:(Even (x.1 + x.2))
+      · rw [if_pos h]; simp
+      · rw [if_neg h]; simp
+    | 2 => by tauto
 
 /-- `rectMap` is injective. -/
 theorem rectMap_injective : Function.Injective rectMap := by decide

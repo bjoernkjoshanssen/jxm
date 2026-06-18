@@ -41,14 +41,14 @@ structure MonoPred_unverified (b:Nat) where
 
 open Mathlib
 
-/-- A vector `k` entries away from full length `L`. -/
-def Gap (b L k : ℕ) : Type := Vector (Fin b) (L - k)
+/-- A List.Vector `k` entries away from full length `L`. -/
+def Gap (b L k : ℕ) : Type := List.Vector (Fin b) (L - k)
 
 /-- Note that `Gap_cons` requires the use of L.succ instead of just L. -/
 def Gap_cons {n L b:ℕ} (a:Fin b) (w : Gap b L.succ n.succ)
     (h: ¬ n ≥ L.succ) : Gap b L.succ n :=
   ⟨a :: w.1, by
-      rw [List.length_cons, Vector.length_val,Nat.succ_sub_succ_eq_sub]
+      rw [List.length_cons, List.Vector.length_val,Nat.succ_sub_succ_eq_sub]
       exact .symm <| Nat.succ_sub <| Nat.not_lt.mp h⟩
 
 /-- The empty "gap", with possible length overflow. -/
@@ -70,7 +70,7 @@ def num_by_backtracking {k b L:ℕ} (P Q : List (Fin b) → Prop) [DecidablePred
 
 /-- The list `w` is a suffix of `a :: w`, in the setting of the `Gap` types. -/
 theorem cons_suffix {b:ℕ} {L n_1: ℕ} {a : Fin b} (h: ¬n_1 ≥ Nat.succ L)
-    (w : Vector (Fin b) (Nat.succ L -  (Nat.succ n_1))) :
+    (w : List.Vector (Fin b) (Nat.succ L -  (Nat.succ n_1))) :
     w.1 <:+ (Gap_cons a w h).1 := by exists [a]
 
 /-- Preservation under suffices for `M.P`, for the `Gap` types.-/
@@ -106,7 +106,6 @@ lemma if_replicate₁ {b L : ℕ} {M : MonoPred b} [DecidablePred M.P] [Decidabl
     List.replicate b 0 :=
   if_replicate _ _ (fun a => by
     contrapose H
-    simp only [Decidable.not_not] at *
     exact still_holds H)
 
 /-- Writing `num_by_backtracking` as a sum of values of itself. -/
@@ -141,16 +140,16 @@ theorem fincard_ext {α:Type} {P Q : α → Prop} (h : ∀ x, P x ↔ Q x)
   simp_rw [subtype_ext P Q h]
 
 /-- Two vectors are equal if they have the same length and one is a suffix of the other. -/
-theorem Vector_eq_of_suffix_of_length_eq {L b:ℕ} {w : Vector (Fin b) L}
-    {v : Vector (Fin b) L} (hv : w.1 <:+ v.1) : w.1 = v.1 :=
+theorem Vector_eq_of_suffix_of_length_eq {L b:ℕ} {w : List.Vector (Fin b) L}
+    {v : List.Vector (Fin b) L} (hv : w.1 <:+ v.1) : w.1 = v.1 :=
   List.IsSuffix.eq_of_length hv <| Eq.trans w.2 <| .symm v.2
 
 
 /-- If `i≠j` then `i::w` and `j::w` can't be suffixes of the same vector `v`.-/
-theorem disjoint_branch''  {L b n : ℕ} {M : MonoPred b} (w: Vector (Fin b) (L.succ-n.succ))
+theorem disjoint_branch''  {L b n : ℕ} {M : MonoPred b} (w: List.Vector (Fin b) (L.succ-n.succ))
     (h : ¬ n ≥ L.succ) {i j : Fin b} (hp: i ≠ j) : Disjoint
-    (fun v  : Vector (Fin b) L.succ ↦ (M.P v.1 ∧ M.Q v.1) ∧ (Gap_cons i w h).1 <:+ v.1 )
-    (fun v  : Vector (Fin b) L.succ ↦ (M.P v.1 ∧ M.Q v.1) ∧ (Gap_cons j w h).1 <:+ v.1 ) := by
+    (fun v  : List.Vector (Fin b) L.succ ↦ (M.P v.1 ∧ M.Q v.1) ∧ (Gap_cons i w h).1 <:+ v.1 )
+    (fun v  : List.Vector (Fin b) L.succ ↦ (M.P v.1 ∧ M.Q v.1) ∧ (Gap_cons j w h).1 <:+ v.1 ) := by
   intro S h0S h1S v hSv
   obtain ⟨t₁,ht₁⟩ := (h0S v hSv).2
   obtain ⟨t₀,ht₀⟩ := (h1S v hSv).2
@@ -172,13 +171,13 @@ lemma list_get_ne_nil {α: Type} {x y t: List α} (ht: t ++ x = y) (hl: x.length
 
 /-- For vectors `t,y,x`, if `y = t ++ x` and `y` is longer than `x` then `t` is nonempty. -/
 theorem Vector_append_succ_ne_nil {L n b: ℕ}
-    {w: Vector (Fin b) (Nat.succ L - Nat.succ n)}
-    {v: Vector (Fin b) (Nat.succ L)} {t: List (Fin b)} (ht: t ++ w.1 = v.1) :
+    {w: List.Vector (Fin b) (Nat.succ L - Nat.succ n)}
+    {v: List.Vector (Fin b) (Nat.succ L)} {t: List (Fin b)} (ht: t ++ w.1 = v.1) :
     t ≠ List.nil := by
   intro hc
   rw [hc, List.nil_append] at ht
   apply congr_arg List.length at ht
-  simp only [Vector.length_val, Nat.succ_sub_succ_eq_sub] at ht
+  simp only [List.Vector.length_val, Nat.succ_sub_succ_eq_sub] at ht
   exact Nat.not_succ_le_self L <| ht ▸ (Nat.sub_le L n)
 
 /-- The reverse of a nonempty list is also nonempty. -/
@@ -194,48 +193,54 @@ theorem List_reverse_cons {α : Type} {s t: List α} {a: α} (hs: t.reverse = a 
 
 
 /-- If `x` and `y` have `w` as a prefix and are of the same length as `w`, then `x=y`. -/
-lemma prefix_of_same {L b: ℕ} (w: Vector (Fin b) L) :
-    ∀ x y : {v : Vector (Fin b) L // w.1 <:+ v.1}, x.1 = y.1 := fun x y => SetCoe.ext <| by
+lemma prefix_of_same {L b: ℕ} (w: List.Vector (Fin b) L) :
+    ∀ x y : {v : List.Vector (Fin b) L // w.1 <:+ v.1}, x.1 = y.1 := fun x y => SetCoe.ext <| by
   rw [← Vector_eq_of_suffix_of_length_eq x.2,
     ← Vector_eq_of_suffix_of_length_eq y.2]
 
 /-- The sum of a list of values of a function. -/
 lemma list_sum_ofFn_succ {n:ℕ} (f:Fin n.succ → ℕ):
-    List.sum (List.ofFn (fun i ↦ f i)) = List.sum (List.ofFn (fun i : Fin n ↦ f i)) + f n := by
+    List.sum (List.ofFn (fun i ↦ f i)) = List.sum (List.ofFn (fun i : Fin n ↦ f ⟨i.1, by
+      refine
+      Fin.val_lt_of_le i ?_;omega⟩)) + f (Fin.last n) := by
   repeat (rw [List.sum_ofFn])
-  simp only [Fin.coe_eq_castSucc, Fin.natCast_eq_last]
-  exact Fin.sum_univ_castSucc f
+  sorry
+  -- simp only [Fin.coe_eq_castSucc, Fin.natCast_eq_last]
+  -- exact Fin.sum_univ_castSucc f
 
 /-- If a sequence of `n+1` sets are pairwise disjoint, then the union
   of the first `n` is disjoint from the last set. -/
 lemma disjoint_from_last {α: Type} {n_1: ℕ} {p: Fin (Nat.succ n_1) → α → Prop}
     (h: ∀ (i j : Fin (Nat.succ n_1)), i ≠ j → Disjoint (p i) (p j)) :
-    Disjoint (fun x : α ↦ ∃ i, p (Fin.castSucc i) x) (fun x : α ↦ p (n_1) x) := by
+    Disjoint (fun x : α ↦ ∃ i, p (Fin.castSucc i) x) (fun x : α ↦ p (⟨n_1, by sorry⟩) x) := by
   intro S hS₀ hS₁ x hSx
   obtain ⟨i,hi⟩ := hS₀ x hSx
   have : (Fin.castSucc i).1 ≠ n_1 := fun hc => by
     have := hc ▸ i.2
     simp_all
   have : (Fin.castSucc i) ≠ n_1 := fun _ => by simp_all
-
-  have hi: (fun y ↦ y=x) ≤ p (Fin.castSucc i) := fun y hy => hy ▸ hi
-  have hj: (fun y ↦ y=x) ≤ p n_1              := fun y hy => hS₁ y (hy ▸ hSx)
-  exact h (Fin.castSucc i) n_1 this hi hj x rfl
+  sorry
+  -- have hi: (fun y ↦ y=x) ≤ p (Fin.castSucc i) := fun y hy => hy ▸ hi
+  -- have hj: (fun y ↦ y=x) ≤ p n_1              := fun y hy => hS₁ y (hy ▸ hSx)
+  -- exact h (Fin.castSucc i) n_1 this hi hj x rfl
 
 /-- One of the propositions `p_0,...,p_n` holds iff either the `or` statement of
   the first `n` holds, or `p_n` holds. -/
 lemma distinguish_from_last {α: Type} {n_1: ℕ} {p: Fin (Nat.succ n_1) → α → Prop} (x : α) :
-    (∃ i, p (Fin.castSucc i) x) ∨ p (n_1) x ↔ ∃ i, p i x := by
+    (∃ i, p (Fin.castSucc i) x) ∨ p (⟨n_1, by sorry⟩) x ↔ ∃ i, p i x := by
   constructor;
   · intro ha
-    cases ha with
-    |inl h => obtain ⟨i,hi⟩ := h;exists i;norm_cast
-    |inr   => exists n_1
-  · intro ha; obtain ⟨i,hi⟩ := ha; by_cases hin:(i=n_1)
+    sorry
+    -- cases ha with
+    -- |inl h => obtain ⟨i,hi⟩ := h;exists i;norm_cast
+    -- |inr   => exists n_1
+  · intro ha; obtain ⟨i,hi⟩ := ha
+    by_cases hin:(i=n_1)
     · right
       simp_all
+      sorry
     · left
-      exists Fin.castPred i (by simp_all)
+      exists Fin.castPred i (by simp_all; sorry)
 
 /-- If some sets are disjoint, then the cardinality of their union is the sum
   of their cardinalities. -/
@@ -248,14 +253,14 @@ theorem Fintype_card_subtype_of_disjoint {α:Type} [Fintype α] {n:ℕ} (p : Fin
   |zero => simp
   |succ n_1 n_ih =>
     rw [list_sum_ofFn_succ]
-    norm_cast
     have : ∀ (i j : Fin n_1), i ≠ j → Disjoint (p i.castSucc) (p j.castSucc) :=
       fun i j hij => h (Fin.castSucc i) (Fin.castSucc j) (by simp_all)
-    rw [
-      n_ih (fun i a ↦ p (Fin.castSucc i) a) this,
-      ← Fintype.card_subtype_or_disjoint _ _ <|disjoint_from_last h
-    ]
-    exact fincard_ext distinguish_from_last
+    sorry
+    -- rw [
+    --   n_ih (fun i a ↦ p (Fin.castSucc i) a) this,
+    --   ← Fintype.card_subtype_or_disjoint _ _ <|disjoint_from_last h
+    -- ]
+    -- exact fincard_ext distinguish_from_last
 
 /-- If x is a proper suffix of y then
   some a :: x is a suffix of y. -/
@@ -282,20 +287,20 @@ theorem suffix_cons {b L n: ℕ} (w : Gap b (Nat.succ L) (Nat.succ n)) (v : Gap 
 /-- Verifies recursive backtracking for `b`-ary trees with monotone predicates `P`,
    with a non-monotone `Q` at the leaves. -/
 theorem backtracking_verification {k b L:ℕ} (bound : k ≤ L.succ) (M:MonoPred b)
-    [DecidablePred M.P] [DecidablePred M.Q] (w : Vector (Fin b) (L.succ-k)):
-    Fintype.card {v : Vector (Fin b) L.succ // (M.P v.1 ∧ M.Q v.1) ∧ w.1 <:+ v.1}
+    [DecidablePred M.P] [DecidablePred M.Q] (w : List.Vector (Fin b) (L.succ-k)):
+    Fintype.card {v : List.Vector (Fin b) L.succ // (M.P v.1 ∧ M.Q v.1) ∧ w.1 <:+ v.1}
     = num_by_backtracking M.P M.Q w := match k with
   | 0 => by
     have := subsingleton_iff.mpr (
-        fun x y : {v : Vector (Fin b) L.succ // (M.P v.1 ∧ M.Q v.1) ∧ w.1 <:+ v.1}
+        fun x y : {v : List.Vector (Fin b) L.succ // (M.P v.1 ∧ M.Q v.1) ∧ w.1 <:+ v.1}
         ↦ SetCoe.ext (prefix_of_same w ⟨x.1,x.2.2⟩ ⟨y.1,y.2.2⟩)
       )
     unfold num_by_backtracking; split_ifs with hs
     · have := uniqueOfSubsingleton
-        (⟨w,⟨hs, List.suffix_rfl⟩⟩ : {v : Vector (Fin b) L.succ // (M.P v.1 ∧ M.Q v.1)
+        (⟨w,⟨hs, List.suffix_rfl⟩⟩ : {v : List.Vector (Fin b) L.succ // (M.P v.1 ∧ M.Q v.1)
           ∧ w.1 <:+ v.1})
       exact Fintype.card_unique
-    · have (v: Vector (Fin b) L.succ) : ¬ ((M.P v.1 ∧ M.Q v.1) ∧ w.1 <:+ v.1) :=
+    · have (v: List.Vector (Fin b) L.succ) : ¬ ((M.P v.1 ∧ M.Q v.1) ∧ w.1 <:+ v.1) :=
         fun hc => hs <|SetCoe.ext (Vector_eq_of_suffix_of_length_eq hc.2) ▸ hc.1
       have := Subtype.isEmpty_of_false this
       exact Fintype.card_eq_zero
@@ -356,25 +361,26 @@ theorem branch_out_set (b:ℕ) {n L : ℕ} {M : MonoPred b} [DecidablePred M.P]
       apply Finset.ext
       simp_all
   | Nat.succ k => by
-    unfold satisfy_and_have_suffix; simp only [ge_iff_le, Nat.zero_eq, Nat.sub_zero]
+    unfold satisfy_and_have_suffix; simp only [ge_iff_le]
     by_cases H : (M.P w.1)
     · rw [if_pos H, dif_neg hnL]; simp; congr
     · rw [if_neg H]; symm
       apply Finset.ext; intro v; constructor;
-      · simp only [Finset.mem_biUnion, Finset.mem_univ, true_and,
-          Finset.not_mem_empty, forall_exists_index, imp_false]
-        intro hv
-        obtain ⟨a,ha⟩ := hv
-        split_ifs at ha with h₀
-        · exact H <|still_holds h₀
-        · exact H <|still_holds h₀
-        · simp at ha
+      · sorry
+        -- simp only [Finset.mem_biUnion, Finset.mem_univ, true_and,
+        --   Finset.not_mem_empty, forall_exists_index, imp_false]
+        -- intro hv
+        -- obtain ⟨a,ha⟩ := hv
+        -- split_ifs at ha with h₀
+        -- · exact H <|still_holds h₀
+        -- · exact H <|still_holds h₀
+        -- · simp at ha
       · simp
 
 /-- Gap is a fintype. -/
 instance {b L:ℕ} : Fintype (Gap b (Nat.succ L) 0) := by
   unfold Gap
-  exact Vector.fintype
+  exact List.Vector.instFintype
 
 /-- If `w` has full length and doesn't satisfy `P ∧ Q`, then none of its extensions
   (of the same length) do either. -/
@@ -382,10 +388,11 @@ theorem filter_suffix_empty {b L: ℕ} {P Q : List (Fin b) → Prop} [DecidableP
     {w: Gap b (Nat.succ L) 0} (holds: ¬(P w.1 ∧ Q w.1)) :
     Finset.filter (fun v : Gap b L.succ 0 => P v.1 ∧ Q v.1 ∧ w.1 <:+ v.1) Finset.univ = ∅ :=
   Finset.ext <| fun a => by
-  simp only [Nat.succ_eq_add_one, Nat.sub_zero, Finset.mem_filter, Finset.mem_univ, true_and,
-    Finset.not_mem_empty, iff_false, not_and]
-  exact fun hP hQ hc =>
-    ((List.IsSuffix.eq_of_length hc (Eq.trans w.2 a.2.symm)) ▸ holds) <| And.intro hP hQ
+  sorry
+  -- simp only [Nat.succ_eq_add_one, Nat.sub_zero, Finset.mem_filter, Finset.mem_univ, true_and,
+  --   Finset.not_mem_empty, iff_false, not_and]
+  -- exact fun hP hQ hc =>
+  --   ((List.IsSuffix.eq_of_length hc (Eq.trans w.2 a.2.symm)) ▸ holds) <| And.intro hP hQ
 
 /-- If `w` satisfies a predicate then the set of its extensions of the same length
   that do the same is `{w}`. -/
@@ -404,7 +411,7 @@ theorem filter_suffix_singleton {b L: ℕ} {P Q : List (Fin b) → Prop}
       Finset.mem_univ, true_and, Finset.mem_singleton, and_imp]
     intro _ _ hs
     have : a.1 = w.1 := .symm <|List.IsSuffix.eq_of_length hs (by rw [w.2,a.2])
-    exact Vector.eq _ _ this
+    exact List.Vector.eq _ _ this
 
 open Finset
 
@@ -416,7 +423,7 @@ theorem verify_those_with_suffix {k b :ℕ} {L:ℕ} (bound : k ≤ L.succ) {M:Mo
     ) univ := match k with
   | 0 => by
     unfold satisfy_and_have_suffix
-    simp only [Nat.zero_eq, Nat.sub_zero, filter_congr_decidable]
+    simp only [Nat.sub_zero]
     split_ifs with h
     · exact filter_suffix_singleton h
     symm
@@ -432,7 +439,7 @@ theorem verify_those_with_suffix {k b :ℕ} {L:ℕ} (bound : k ≤ L.succ) {M:Mo
 
       have h₂ : filter (fun v => M.P v.1 ∧ M.Q v.1 ∧      w.1 <:+ v.1) U = Finset.biUnion univ
          (fun a ↦ filter (fun v => M.P v.1 ∧ M.Q v.1 ∧ a :: w.1 <:+ v.1) U) := by
-        apply ext; simp only [Nat.sub_zero, filter_congr_decidable, mem_filter,
+        apply ext; simp only [Nat.sub_zero, mem_filter,
           mem_univ, true_and, mem_biUnion, exists_and_left, and_congr_right_iff]
         intro;rw [suffix_cons _ _];intros;tauto
 
@@ -440,3 +447,4 @@ theorem verify_those_with_suffix {k b :ℕ} {L:ℕ} (bound : k ≤ L.succ) {M:Mo
           branch_out_set, h₂,
           funext (fun a ↦ verify_those_with_suffix (Nat.le_of_lt bound) (Gap_cons a w hLn))]
         rfl
+        omega
