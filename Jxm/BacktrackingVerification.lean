@@ -200,47 +200,51 @@ lemma prefix_of_same {L b: ℕ} (w: List.Vector (Fin b) L) :
 
 /-- The sum of a list of values of a function. -/
 lemma list_sum_ofFn_succ {n:ℕ} (f:Fin n.succ → ℕ):
-    List.sum (List.ofFn (fun i ↦ f i)) = List.sum (List.ofFn (fun i : Fin n ↦ f ⟨i.1, by
-      refine
-      Fin.val_lt_of_le i ?_;omega⟩)) + f (Fin.last n) := by
+    List.sum (List.ofFn (fun i ↦ f i)) = List.sum (List.ofFn (fun i : Fin n ↦
+      f (Fin.castSucc i))) + f (Fin.last n) := by
   repeat (rw [List.sum_ofFn])
-  sorry
-  -- simp only [Fin.coe_eq_castSucc, Fin.natCast_eq_last]
-  -- exact Fin.sum_univ_castSucc f
+  rw [Fin.sum_univ_castSucc]
 
 /-- If a sequence of `n+1` sets are pairwise disjoint, then the union
   of the first `n` is disjoint from the last set. -/
 lemma disjoint_from_last {α: Type} {n_1: ℕ} {p: Fin (Nat.succ n_1) → α → Prop}
     (h: ∀ (i j : Fin (Nat.succ n_1)), i ≠ j → Disjoint (p i) (p j)) :
-    Disjoint (fun x : α ↦ ∃ i, p (Fin.castSucc i) x) (fun x : α ↦ p (⟨n_1, by sorry⟩) x) := by
+    Disjoint (fun x : α ↦ ∃ i, p (Fin.castSucc i) x) (fun x : α ↦ p (Fin.last n_1) x) := by
   intro S hS₀ hS₁ x hSx
   obtain ⟨i,hi⟩ := hS₀ x hSx
   have : (Fin.castSucc i).1 ≠ n_1 := fun hc => by
     have := hc ▸ i.2
     simp_all
   have : (Fin.castSucc i) ≠ n_1 := fun _ => by simp_all
-  sorry
-  -- have hi: (fun y ↦ y=x) ≤ p (Fin.castSucc i) := fun y hy => hy ▸ hi
-  -- have hj: (fun y ↦ y=x) ≤ p n_1              := fun y hy => hS₁ y (hy ▸ hSx)
+  have hi: (fun y ↦ y=x) ≤ p (Fin.castSucc i) := fun y hy => hy ▸ hi
+  have hj: (fun y ↦ y=x) ≤ p (Fin.last n_1)              := fun y hy => hS₁ y (hy ▸ hSx)
+  exact h (Fin.castSucc i) (Fin.last n_1) (by
+    contrapose! this
+    rw [this]
+    rfl) hi hj x rfl
   -- exact h (Fin.castSucc i) n_1 this hi hj x rfl
 
 /-- One of the propositions `p_0,...,p_n` holds iff either the `or` statement of
   the first `n` holds, or `p_n` holds. -/
 lemma distinguish_from_last {α: Type} {n_1: ℕ} {p: Fin (Nat.succ n_1) → α → Prop} (x : α) :
-    (∃ i, p (Fin.castSucc i) x) ∨ p (⟨n_1, by sorry⟩) x ↔ ∃ i, p i x := by
+    (∃ i, p (Fin.castSucc i) x) ∨ p (⟨n_1, by omega⟩) x ↔ ∃ i, p i x := by
   constructor;
   · intro ha
-    sorry
-    -- cases ha with
-    -- |inl h => obtain ⟨i,hi⟩ := h;exists i;norm_cast
-    -- |inr   => exists n_1
+    cases ha with
+    |inl h => obtain ⟨i,hi⟩ := h;exists Fin.castSucc i
+    |inr   => exists Fin.last n_1
   · intro ha; obtain ⟨i,hi⟩ := ha
     by_cases hin:(i=n_1)
     · right
       simp_all
-      sorry
+      convert hi
+      rw [hin]
     · left
-      exists Fin.castPred i (by simp_all; sorry)
+      exists Fin.castPred i (by
+        simp_all
+        contrapose! hin
+        rw [hin]
+        rfl)
 
 /-- If some sets are disjoint, then the cardinality of their union is the sum
   of their cardinalities. -/
@@ -255,12 +259,11 @@ theorem Fintype_card_subtype_of_disjoint {α:Type} [Fintype α] {n:ℕ} (p : Fin
     rw [list_sum_ofFn_succ]
     have : ∀ (i j : Fin n_1), i ≠ j → Disjoint (p i.castSucc) (p j.castSucc) :=
       fun i j hij => h (Fin.castSucc i) (Fin.castSucc j) (by simp_all)
-    sorry
-    -- rw [
-    --   n_ih (fun i a ↦ p (Fin.castSucc i) a) this,
-    --   ← Fintype.card_subtype_or_disjoint _ _ <|disjoint_from_last h
-    -- ]
-    -- exact fincard_ext distinguish_from_last
+    have :=
+      n_ih (fun i a ↦ p (Fin.castSucc i) a) this
+    rw [this]
+    rw [← Fintype.card_subtype_or_disjoint _ _ <|disjoint_from_last h]
+    exact fincard_ext distinguish_from_last
 
 /-- If x is a proper suffix of y then
   some a :: x is a suffix of y. -/
@@ -366,15 +369,12 @@ theorem branch_out_set (b:ℕ) {n L : ℕ} {M : MonoPred b} [DecidablePred M.P]
     · rw [if_pos H, dif_neg hnL]; simp; congr
     · rw [if_neg H]; symm
       apply Finset.ext; intro v; constructor;
-      · sorry
-        -- simp only [Finset.mem_biUnion, Finset.mem_univ, true_and,
-        --   Finset.not_mem_empty, forall_exists_index, imp_false]
-        -- intro hv
-        -- obtain ⟨a,ha⟩ := hv
-        -- split_ifs at ha with h₀
-        -- · exact H <|still_holds h₀
-        -- · exact H <|still_holds h₀
-        -- · simp at ha
+      · simp
+        intro i
+        split_ifs with g₀ g₁
+        · exact False.elim <| H <|still_holds g₀
+        · exact False.elim <| H <|still_holds g₀
+        · simp
       · simp
 
 /-- Gap is a fintype. -/
@@ -388,11 +388,9 @@ theorem filter_suffix_empty {b L: ℕ} {P Q : List (Fin b) → Prop} [DecidableP
     {w: Gap b (Nat.succ L) 0} (holds: ¬(P w.1 ∧ Q w.1)) :
     Finset.filter (fun v : Gap b L.succ 0 => P v.1 ∧ Q v.1 ∧ w.1 <:+ v.1) Finset.univ = ∅ :=
   Finset.ext <| fun a => by
-  sorry
-  -- simp only [Nat.succ_eq_add_one, Nat.sub_zero, Finset.mem_filter, Finset.mem_univ, true_and,
-  --   Finset.not_mem_empty, iff_false, not_and]
-  -- exact fun hP hQ hc =>
-  --   ((List.IsSuffix.eq_of_length hc (Eq.trans w.2 a.2.symm)) ▸ holds) <| And.intro hP hQ
+  simp
+  exact fun hP hQ hc =>
+    ((List.IsSuffix.eq_of_length hc (Eq.trans w.2 a.2.symm)) ▸ holds) <| And.intro hP hQ
 
 /-- If `w` satisfies a predicate then the set of its extensions of the same length
   that do the same is `{w}`. -/
