@@ -50,18 +50,17 @@ open Finset Mathlib
 lemma sum_pred₀ (n:ℕ) : Finset.sum (range n) (fun k ↦ k-1) = (n-1)*(n-2)/2 := by
   apply sum_range_induction
   · rfl
-  · intro n
+  · intro m hm
     simp only [add_tsub_cancel_right, Nat.succ_sub_succ_eq_sub]
-    suffices  (n * (n - 1) / 2)*2 = ((n - 1) * (n - 2) / 2 + (n - 1))*2 by
-      sorry
-      -- exact Nat.mul_right_cancel (Nat.zero_lt_two) this
+    suffices (m * (m - 1) / 2)*2 = ((m - 1) * (m - 2) / 2 + (m - 1)) * 2 by
+      omega
     rw [
       Nat.add_mul,
-      Nat.div_two_mul_two_of_even (Nat.even_mul_pred_self n),
-      Nat.div_two_mul_two_of_even (by exact Nat.even_mul_pred_self (n-1)),
+      Nat.div_two_mul_two_of_even (Nat.even_mul_pred_self m),
+      Nat.div_two_mul_two_of_even (by exact Nat.even_mul_pred_self (m-1)),
       ← Nat.mul_add
     ]
-    cases n with
+    cases m with
     | zero => simp
     | succ n_1 =>
       simp only [Nat.succ_sub_succ_eq_sub, tsub_zero]

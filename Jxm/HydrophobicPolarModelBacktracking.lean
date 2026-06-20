@@ -231,30 +231,35 @@ lemma rot_length₀ (moves: List (Fin 4)) (k: Fin (List.Vector.length (path rect
     k.1 < Nat.succ (List.length (morph (fun a _ => rotateIndex a) rect moves)) := by
   rw [morph_len]
   simp
-  sorry
+  have := k.2
+  simp at this
+  exact this
 
 /-- . -/
 lemma ref_length₀ (moves: List (Fin 4)) (k: Fin (List.Vector.length (path rect moves))) :
     k.1 < Nat.succ (List.length (morph (fun a _ => reflectIndex a) rect moves)) := by
   rw [morph_len]
   simp
-  sorry
+  have := k.2
+  simp at this
+  exact this
 
 /-- finished 3/8/24 -/
 lemma ref_length₀_morf (moves: List (Fin 4)) (k: Fin (List.Vector.length (path rect moves))) :
     k.1 < Nat.succ (List.length (morf_list reflectIndex moves)) := by
   rw [morf_len]
   simp
-  sorry
+  have := k.2
+  simp at this
+  exact this
 
 /-- . -/
 theorem path_len_aux₁ {hd: Fin 4} {tl: List (Fin 4)} (k: Fin <|List.Vector.length <|path rect <|hd :: tl)
     {s : ℕ} (hs : k.1 = Nat.succ s) : s < Nat.succ (List.length (tl)) := by
   have h₁: List.Vector.length (path rect (hd :: tl)) = List.length (path rect (hd :: tl)).1 :=
     (path_len' rect (List.length (hd :: tl)) (hd :: tl) rfl).symm
-  sorry
-  -- exact (path_len' rect tl.length _ rfl) ▸ (Nat.succ_inj'.mp h₁) ▸
-  --   Nat.succ_lt_succ_iff.mp (hs ▸ k.2)
+  exact (path_len' rect tl.length _ rfl) ▸ (Nat.succ_inj.mp h₁) ▸
+    Nat.succ_lt_succ_iff.mp (hs ▸ k.2)
 
 /-- . -/
 theorem morph_path_succ_aux {hd: Fin 4} {tl: List (Fin 4)}
@@ -939,21 +944,13 @@ theorem convex_equifoldable {l : ℕ} {ph₀ ph₁ ph₂: List.Vector Bool l.suc
   Subset.antisymm (goodFolds_monotone rect ph₀ ph₁ h₀₁ 2)
            <|h₀₂ ▸ goodFolds_monotone rect ph₁ ph₂ h₁₂ 2
 
--- theorem monotonicity_of_sim {k l :ℕ} (x₀ y₀: List.Vector Bool l.succ.succ)
---  (x₁ y₁: List.Vector Bool k.succ.succ)
--- (h: List.Vector.append x₀ x₁ ∼ List.Vector.append y₀ y₁) : x₀ ∼ y₀ := by
---   -- not true, due to Stecher type phenomena:
---   -- let x be a Stecher string, let x' an all-false string of the same length, and
--- consider x++[1] and x'++[1]
---   sorry
-
 
 /-- points_tot = Fin.card points_loc -/
 def goodPairs (go: Fin 4 → ℤ×ℤ→ℤ×ℤ) {l : ℕ} (fold : List.Vector (ℤ×ℤ) l) (ph : List.Vector Bool l) :=
     filter (fun ik : (Fin l) × (Fin l) ↦ ((pt_loc go fold ik.1 ik.2 ph): Prop)) univ
 
 /-- Note that this is not true for ∪ and join. -/
-theorem goodPairs_meet (go: Fin 4 → ℤ×ℤ→ℤ×ℤ) {l : ℕ} (ph₀ ph₁ : List.Vector Bool l.succ)
+theorem goodPairs_meet (go: Fin 4 → ℤ × ℤ → ℤ × ℤ) {l : ℕ} (ph₀ ph₁ : List.Vector Bool l.succ)
     (fold : List.Vector (ℤ×ℤ) (Nat.succ l)) :
     goodPairs go fold (ph₀ ⊓ ph₁) = goodPairs go fold ph₀ ∩ goodPairs go fold ph₁ :=
   ext <| fun ij => by

@@ -196,17 +196,12 @@ def points_tot {α β : Type} [DecidableEq α] [Fintype β] (go : β → α → 
 def ProteinGraph₀ {α:Type} {β : Type} [Fintype β] (go : β → α → α) [DecidableEq α] {l:ℕ}
     (ph : List.Vector Bool l.succ) (fold : List.Vector α l.succ) : SimpleGraph (Fin l.succ) := {
   Adj := fun i j ↦ (pt_loc go fold i j ph) ∨ (pt_loc go fold j i ph)
-  symm := by
-    sorry
-    -- intro _ _ h;cases h with
-    -- |inl => right;tauto
-    -- |inr => left;tauto
+  symm := { symm := fun _ _ a_1 ↦ a_1.symm }
   loopless := by
-    sorry
-    -- intro i hi;unfold pt_loc at hi; simp only [Bool.and_self, Bool.and_eq_true,
-    --   decide_eq_true_eq, or_self] at hi
-    -- have : i.1.succ < i.1 := by tauto
-    -- simp at this
+    refine { irrefl := ?_ }
+    intro i hi
+    unfold pt_loc at hi
+    simp at hi
 }
 
 /-- . -/
@@ -720,7 +715,7 @@ theorem orderly_injective_helper₁ {β:Type} {k : ℕ} {x : (Fin k.succ) → β
         simp_rw [← Nat.succ_eq_add_one,← hi];
         exact h_1
       calc
-        i < i.succ          := Nat.lt.base i
+        i < i.succ          := by omega
         _ = Nat.find hthis  := hi.symm
         _ < j               := (Nat.find_spec hthis).1
     )
@@ -1014,7 +1009,7 @@ theorem value_bound_of_embeds_strongly {α:Type} [Zero α] [DecidableEq α] {b�
         (⟨(path go₀ moves.1).1,path_len _ _⟩)
   _ = pts_tot' go₁ ph ⟨(path go₁ moves'.1).1, path_len _ _⟩ := by
       simp_rw [path_eq_path_morph f go₀ go₁ hf moves.1]
-      sorry
+      rfl
   _ ≤ q                                                     := hq moves' h_inj')
 
 
