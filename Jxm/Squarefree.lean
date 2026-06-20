@@ -49,13 +49,17 @@ theorem suffix_squarefree (b:ℕ) (u v : List (Fin b)) (h: u <:+ v) (hu : square
     squarefree u := by
   intro lx _ x hx
   obtain ⟨t,ht⟩ := h; intro hc
+  have : x.1.length ≠ 0 := by
+    intro hc
+    have : x.1 = [] := List.eq_nil_iff_length_eq_zero.mpr hc
+    tauto
   have : lx < v.length := calc
         lx  = x.1.length              := x.2.symm
-        _   < x.1.length + x.1.length := sorry --Nat.lt_add_of_pos_left (List.length_pos.mpr hx)
-        _   = (x.1 ++ x.1).length     := sorry --(List.length_append x.1 x.1).symm
+        _   < x.1.length + x.1.length := by omega
+        _   = (x.1 ++ x.1).length     := by simp
         _   ≤ u.length                := List.IsInfix.length_le hc
         _   ≤ t.length + u.length     := by linarith
-        _   = v.length                := by sorry --rw [← List.length_append t u,ht]
+        _   = v.length                := by rw [← List.length_append,ht]
   let G := hu lx this x hx; unfold List.IsInfix at G
   let ⟨s₀,hs₀⟩ := hc; let ⟨s₁,hs₁⟩ := hs₀
   have : ∃ s t, s ++ (x.1 ++ x.1) ++ t = v := by use t ++ s₀; use s₁; rw [← ht,← hs₁]; simp
@@ -65,15 +69,19 @@ theorem suffix_squarefree (b:ℕ) (u v : List (Fin b)) (h: u <:+ v) (hu : square
 theorem suffix_cubefree (b:ℕ) (u v : List (Fin b)) (h: u <:+ v) (hu : cubefree v) : cubefree u := by
   intro lx _ x hx hc
   obtain ⟨t,ht⟩ := h
+  have : x.1.length ≠ 0 := by
+    intro hc
+    have : x.1 = [] := List.eq_nil_iff_length_eq_zero.mpr hc
+    tauto
   have : lx < v.length := calc
     lx  = x.1.length                            := x.2.symm
-    _   < x.1.length + x.1.length               := sorry --Nat.lt_add_of_pos_left (List.length_pos.mpr hx)
+    _   < x.1.length + x.1.length               := by omega
     _   ≤ x.1.length + x.1.length + x.1.length  := Nat.le_add_right _ _
-    _   = (x.1 ++ x.1).length + x.1.length      := by sorry --rw[(List.length_append x.1 x.1).symm]
-    _   = (x.1 ++ x.1 ++ x.1).length            := sorry --(List.length_append (x.1 ++ x.1) x.1).symm
+    _   = (x.1 ++ x.1).length + x.1.length      := by simp
+    _   = (x.1 ++ x.1 ++ x.1).length            := by simp;omega
     _   ≤ u.length                              := List.IsInfix.length_le hc
     _   ≤ t.length + u.length                   := by linarith
-    _   = v.length                              := sorry --by rw [← List.length_append t u,ht]
+    _   = v.length                              := by rw [← ht];simp
   let G := hu lx this x hx; unfold List.IsInfix at G
   let ⟨s₀,hs₀⟩ := hc; let ⟨s₁,hs₁⟩ := hs₀
   have : ∃ s t, s ++ (x.1 ++ x.1 ++ x.1) ++ t = v := by use t ++ s₀; use s₁; rw [← ht,← hs₁]; simp
