@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2024 Bjørn Kjos-Hanssen. All rights reserved.
+Copyright (c) 2026 Bjørn Kjos-Hanssen. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Bjørn Kjos-Hanssen
 -/
@@ -10,7 +10,8 @@ import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic.Linarith.Frontend
 
 /-!
-# Marginis
+# Backtracking verification
+
 /- We formally verify the method known as recursive backtracking
 for a monotone predicate P and another predicate Q at the leaves. -/
 

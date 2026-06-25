@@ -1,7 +1,7 @@
-name = "jxm"
+name = "ptyche"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["Jxm"]
+defaultTargets = ["Ptyche"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -17,4 +17,4 @@ git = "https://github.com/PatrickMassot/checkdecls.git"
 
 
 [[lean_lib]]
-name = "Jxm"
+name = "Ptyche"
